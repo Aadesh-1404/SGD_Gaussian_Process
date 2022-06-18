@@ -5,7 +5,7 @@ from pyDOE import *
 from smt.sampling_methods import LHS
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder, OneHotEncoder
 
 
 class dataset:
@@ -203,6 +203,59 @@ class dataset:
         X.to_csv("Datasets/borehole/X.csv.gz")
         pd.DataFrame(y).to_csv("Datasets/borehole/y.csv.gz")
 
+    def bike(self):
+        data = pd.read_csv("Datasets/uci_data/bike.csv",
+                           index_col=[0], header=None)
+        X = data.iloc[:, :-1]
+        y = data.iloc[:, -1]
+
+        scaler = StandardScaler()
+        X = pd.DataFrame(scaler.fit_transform(X))
+        y = scaler.fit_transform(np.array(y).reshape(-1, 1))
+        X.to_csv("Datasets/bike/X.csv.gz")
+        pd.DataFrame(y).to_csv("Datasets/bike/y.csv.gz")
+
+    def protein(self):
+        data = pd.read_csv("Datasets/uci_data/protein.csv", header=None)
+        X = data.iloc[:, :-1]
+        y = data.iloc[:, -1]
+        scaler = StandardScaler()
+        X = pd.DataFrame(scaler.fit_transform(X))
+        y = scaler.fit_transform(np.array(y).reshape(-1, 1))
+        X.to_csv("Datasets/protein/X.csv.gz")
+        pd.DataFrame(y).to_csv("Datasets/protein/y.csv.gz")
+
+    def pm25(self):
+        data = pd.read_csv("Datasets/uci_data/pm25.csv", index_col=[0])
+        data.columns = ['year', 'month', 'day', 'hour', 'pm25', 'dew_point', 'temperature',
+                        'pressure', 'wind_dir', 'wind_speed', 'hours_snow', 'hours_rain']
+        l_enc = LabelEncoder()
+        oh_enc = OneHotEncoder(sparse=False)
+        data = data.dropna().reset_index(drop=True)
+        data.wind_dir = l_enc.fit_transform(data.wind_dir)
+        temp = pd.DataFrame(oh_enc.fit_transform(
+            data.wind_dir.values.reshape(-1, 1)), columns=l_enc.classes_)
+        data = data.drop('wind_dir', axis=1)
+        data = data.join(temp)
+        X = data.drop('pm25', axis=1)
+        y = data['pm25']
+        scaler = StandardScaler()
+        X = pd.DataFrame(scaler.fit_transform(X))
+        y = scaler.fit_transform(np.array(y).reshape(-1, 1))
+        X.to_csv("Datasets/pm25/X.csv.gz")
+        pd.DataFrame(y).to_csv("Datasets/pm25/y.csv.gz")
+
+    def energy(self):
+        data = pd.read_csv("Datasets/uci_data/energy.csv",
+                           index_col=[0]).reset_index(drop=True)
+        X = data.iloc[:, 1:]
+        y = data.iloc[:, 0]
+        scaler = StandardScaler()
+        X = pd.DataFrame(scaler.fit_transform(X))
+        y = scaler.fit_transform(np.array(y).reshape(-1, 1))
+        X.to_csv("Datasets/energy/X.csv.gz")
+        pd.DataFrame(y).to_csv("Datasets/energy/y.csv.gz")
+
 
 seed = 0
 make_data = dataset(seed)
@@ -211,3 +264,7 @@ make_data.griewank()
 make_data.borehole()
 make_data.wing_weight()
 make_data.otl_circuit()
+make_data.bike()
+make_data.protein()
+make_data.pm25()
+make_data.energy()
